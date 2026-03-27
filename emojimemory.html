@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        #controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        #moves {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        #restartButton {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+            display: none; 
+            margin-top: 10px;
+        }
+        #restartButton:hover {
+            background-color: #e67e22;
+        }
+        #tester-controls {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #passwordInput {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        #testerButton, #exitTesterButton {
+            padding: 5px 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #exitTesterButton {
+            background-color: #95a5a6; /* Grigio per uscire */
+            display: none; /* Inizialmente nascosto */
+        }
+        #testerButton:hover { background-color: #2980b9; }
+        #exitTesterButton:hover { background-color: #7f8c8d; }
+
+        /* Stili della griglia e delle carte */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 100px); 
+            grid-template-rows: repeat(4, 100px);
+            gap: 10px;
+            padding: 20px;
+            background-color: #5865f2;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+        .card {
+            width: 100px;
+            height: 100px;
+            background-color: #36393f;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 3em;
+            color: transparent; 
+            transition: transform 0.3s, background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+        .card.flipped, .card.preview, .card.debug-active {
+            background-color: #ecf0f1; 
+            color: black;
+            pointer-events: none;
+        }
+        .card.matched {
+            background-color: #2ecc71; 
+            pointer-events: none;
+            color: white;
+            opacity: 0.8;
+        }
+        .card.debug-active {
+            /* Colore diverso per la modalità tester */
+            background-color: #e74c3c; 
+            color: white;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Emoji Memory Game</h1>
+    
+    <div id="tester-controls">
+        <label for="passwordInput">Tester Mode:</label>
+        <input type="password" id="passwordInput" placeholder="Inserisci Password">
+        <button id="testerButton">Attiva</button>
+        <button id="exitTesterButton" style="display: none;">Esci da Tester Mode</button>
+        <p id="testerMessage" style="color:red; margin-top: 5px; font-size: 0.9em;"></p>
+    </div>
+
+    <div id="controls">
+        <div id="moves">Mosse: 0</div>
+        <button id="restartButton">Riprova</button>
+    </div>
+
+    <div id="game-board">
+        </div>
+
+    <script>
+        const cardsArray = [
+            '🦊', '🦁', '🐻', '🐼', '🐵', '🐸', '🐺', '🦉',
+            '🦊', '🦁', '🐻', '🐼', '🐵', '🐸', '🐺', '🦉'
+        ];
+        
+        const CORRECT_PASSWORD = '4468';
+        let isDebugMode = false;
+
+        const gameBoard = document.getElementById('game-board');
+        const movesDisplay = document.getElementById('moves');
+        const restartButton = document.getElementById('restartButton');
+        const passwordInput = document.getElementById('passwordInput');
+        const testerButton = document.getElementById('testerButton');
+        const exitTesterButton = document.getElementById('exitTesterButton'); // NUOVO
+        const testerMessage = document.getElementById('testerMessage');
+        
+
+        let shuffledCards = [];
+        let flippedCards = []; 
+        let matchedPairs = 0;
+        let moves = 0;
+        let lockBoard = true; 
+
+        // --- Gestione Tester Mode ---
+
+        testerButton.addEventListener('click', () => {
+            if (passwordInput.value === CORRECT_PASSWORD) {
+                isDebugMode = true;
+                testerMessage.textContent = 'Modalità Tester Attivata! ✅';
+                testerMessage.style.color = '#2ecc71';
+                
+                // Nasconde gli elementi di input e mostra il pulsante di uscita
+                passwordInput.style.display = 'none';
+                testerButton.style.display = 'none';
+                exitTesterButton.style.display = 'inline-block';
+                testerMessage.style.display = 'inline';
+                
+                updateDebugState(); 
+                lockBoard = false; // Sblocca il gioco anche se non si gioca
+            } else {
+                testerMessage.textContent = 'Password errata.';
+                testerMessage.style.color = '#e74c3c';
+            }
+        });
+
+        // NUOVA FUNZIONE: Esci dalla modalità Tester
+        exitTesterButton.addEventListener('click', () => {
+            isDebugMode = false;
+            testerMessage.textContent = 'Modalità Tester Disattivata.';
+            testerMessage.style.color = '#333';
+            
+            // Nasconde il pulsante di uscita e mostra gli elementi di input
+            passwordInput.style.display = 'inline';
+            testerButton.style.display = 'inline';
+            exitTesterButton.style.display = 'none';
+            
+            // Rimuove la classe debug da tutte le carte non ancora abbinate
+            updateDebugState(); 
+            
+            // Riabilita la possibilità di cliccare e riprende il gioco
+            lockBoard = false; 
+        });
+
+        // Aggiorna lo stato visivo delle carte in base alla modalità debug
+        function updateDebugState() {
+            const allCards = document.querySelectorAll('.card');
+            allCards.forEach(card => {
+                if (isDebugMode) {
+                    card.classList.add('debug-active');
+                } else {
+                    // Se usciamo dalla modalità debug:
+                    card.classList.remove('debug-active');
+                    // Nascondi solo le carte che NON sono state abbinate
+                    if (!card.classList.contains('matched')) {
+                        card.classList.remove('flipped');
+                    }
+                }
+            });
+        }
+        
+        // --- Logica di Gioco Standard ---
+        
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            shuffledCards = shuffle([...cardsArray]);
+            gameBoard.innerHTML = '';
+            moves = 0;
+            movesDisplay.textContent = 'Mosse: 0';
+            matchedPairs = 0;
+            restartButton.style.display = 'none';
+
+            // Resetta i controlli tester solo se non è in modalità debug
+            if (!isDebugMode) {
+                testerMessage.textContent = '';
+                passwordInput.style.display = 'inline';
+                testerButton.style.display = 'inline';
+                exitTesterButton.style.display = 'none';
+            }
+
+            shuffledCards.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.emoji = emoji; 
+                card.dataset.index = index; 
+                card.textContent = emoji;
+                
+                card.addEventListener('click', flipCard);
+                gameBoard.appendChild(card);
+            });
+            
+            if (isDebugMode) {
+                updateDebugState();
+                lockBoard = false; 
+            } else {
+                showPreview();
+            }
+        }
+
+        function showPreview() {
+            lockBoard = true;
+            const allCards = document.querySelectorAll('.card');
+            
+            allCards.forEach(card => card.classList.add('preview'));
+
+            setTimeout(() => {
+                allCards.forEach(card => card.classList.remove('preview'));
+                lockBoard = false;
+            }, 2000); 
+        }
+
+        function flipCard() {
+            if (lockBoard || isDebugMode) return; 
+            if (this === flippedCards[0]) return; 
+
+            this.classList.add('flipped');
+            flippedCards.push(this);
+
+            if (flippedCards.length === 2) {
+                moves++;
+                movesDisplay.textContent = `Mosse: ${moves}`;
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            let [card1, card2] = flippedCards;
+            let isMatch = card1.dataset.emoji === card2.dataset.emoji;
+
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            flippedCards[0].classList.add('matched');
+            flippedCards[0].classList.remove('flipped');
+            flippedCards[1].classList.add('matched');
+            flippedCards[1].classList.remove('flipped');
+            
+            flippedCards = [];
+            matchedPairs++;
+
+            if (matchedPairs === cardsArray.length / 2) {
+                setTimeout(() => {
+                    alert(`Hai vinto in ${moves} mosse!`);
+                    restartButton.style.display = 'inline-block';
+                }, 500);
+            }
+        }
+
+        function unflipCards() {
+            lockBoard = true; 
+
+            setTimeout(() => {
+                flippedCards[0].classList.remove('flipped');
+                flippedCards[1].classList.remove('flipped');
+                
+                flippedCards = [];
+                lockBoard = false;
+            }, 1000); 
+        }
+
+        restartButton.addEventListener('click', initGame);
+
+        // Avvia il gioco
+        initGame();
+    </script>
+</body>
+</html>
