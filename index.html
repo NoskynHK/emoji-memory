@@ -9,18 +9,92 @@
     <link rel="apple-touch-icon" href="logo.png">
 
     <style>
+        :root {
+            --bg: #f0f0f0;
+            --text: #333;
+            --panel-bg: #fff;
+            --panel-border: #ccc;
+        }
+
+        body.dark-mode {
+            --bg: #1a1a2e;
+            --text: #eee;
+            --panel-bg: #16213e;
+            --panel-border: #444;
+        }
+
         body {
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f0f0f0;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
         }
         h1 {
-            color: #333;
+            color: var(--text);
         }
+
+        .back-btn {
+            display: inline-block;
+            background: var(--panel-bg);
+            color: #5865f2;
+            border: 2px solid #5865f2;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: 0.2s;
+        }
+        .back-btn:hover {
+            background: #5865f2;
+            color: white;
+        }
+
+        #topBar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #themeToggle {
+            background-color: var(--panel-bg);
+            color: var(--text);
+            border: 2px solid var(--panel-border);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        #themeToggle:hover {
+            opacity: 0.8;
+        }
+
+        #difficulty-controls {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid var(--panel-border);
+            border-radius: 5px;
+            background-color: var(--panel-bg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
+        }
+
+        #difficultySelect {
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+
         #controls {
             margin: 20px 0;
             text-align: center;
@@ -47,12 +121,13 @@
         #tester-controls {
             margin-bottom: 15px;
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--panel-border);
             border-radius: 5px;
-            background-color: #fff;
+            background-color: var(--panel-bg);
             display: flex;
             align-items: center;
             gap: 10px;
+            color: var(--text);
         }
         #passwordInput {
             padding: 5px;
@@ -68,8 +143,8 @@
             cursor: pointer;
         }
         #exitTesterButton {
-            background-color: #95a5a6; /* Grigio per uscire */
-            display: none; /* Inizialmente nascosto */
+            background-color: #95a5a6;
+            display: none;
         }
         #testerButton:hover { background-color: #2980b9; }
         #exitTesterButton:hover { background-color: #7f8c8d; }
@@ -77,8 +152,6 @@
         /* Stili della griglia e delle carte */
         #game-board {
             display: grid;
-            grid-template-columns: repeat(4, 100px); 
-            grid-template-rows: repeat(4, 100px);
             gap: 10px;
             padding: 20px;
             background-color: #5865f2;
@@ -88,18 +161,26 @@
             transition: opacity 0.5s;
         }
         .card {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             background-color: #36393f;
             border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            font-size: 3em;
+            font-size: 2.6em;
             color: transparent; 
             transition: transform 0.3s, background-color 0.3s, color 0.3s;
             position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        .card::selection {
+            background: transparent;
+            color: transparent;
         }
         .card.flipped, .card.preview, .card.debug-active {
             background-color: #ecf0f1; 
@@ -113,7 +194,6 @@
             opacity: 0.8;
         }
         .card.debug-active {
-            /* Colore diverso per la modalità tester */
             background-color: #e74c3c; 
             color: white;
             opacity: 1;
@@ -122,7 +202,22 @@
 </head>
 <body>
 
+    <a href="INSERISCI-QUI-IL-LINK" class="back-btn">🏠 Torna alla Game Hub</a>
+
     <h1>Emoji Memory Game</h1>
+
+    <div id="topBar">
+        <button id="themeToggle">🌙 Dark Mode</button>
+    </div>
+
+    <div id="difficulty-controls">
+        <label for="difficultySelect">Difficoltà:</label>
+        <select id="difficultySelect">
+            <option value="easy">Facile (4x4)</option>
+            <option value="medium">Medio (4x6)</option>
+            <option value="hard">Difficile (6x6)</option>
+        </select>
+    </div>
     
     <div id="tester-controls">
         <label for="passwordInput">Tester Mode:</label>
@@ -137,32 +232,54 @@
         <button id="restartButton">Riprova</button>
     </div>
 
-    <div id="game-board">
-        </div>
+    <div id="game-board"></div>
 
     <script>
-        const cardsArray = [
+        const EMOJI_POOL = [
             '🦊', '🦁', '🐻', '🐼', '🐵', '🐸', '🐺', '🦉',
-            '🦊', '🦁', '🐻', '🐼', '🐵', '🐸', '🐺', '🦉'
+            '🐯', '🐨', '🐮', '🐷', '🐔', '🐧', '🦄', '🐙',
+            '🦋', '🐝'
         ];
-        
+
+        const DIFFICULTY = {
+            easy:   { pairs: 8,  cols: 4 },
+            medium: { pairs: 12, cols: 6 },
+            hard:   { pairs: 18, cols: 6 }
+        };
+
         const CORRECT_PASSWORD = '4468';
         let isDebugMode = false;
+        let currentDifficulty = 'easy';
 
         const gameBoard = document.getElementById('game-board');
         const movesDisplay = document.getElementById('moves');
         const restartButton = document.getElementById('restartButton');
         const passwordInput = document.getElementById('passwordInput');
         const testerButton = document.getElementById('testerButton');
-        const exitTesterButton = document.getElementById('exitTesterButton'); // NUOVO
+        const exitTesterButton = document.getElementById('exitTesterButton');
         const testerMessage = document.getElementById('testerMessage');
-        
+        const difficultySelect = document.getElementById('difficultySelect');
+        const themeToggle = document.getElementById('themeToggle');
 
         let shuffledCards = [];
         let flippedCards = []; 
         let matchedPairs = 0;
+        let totalPairs = DIFFICULTY[currentDifficulty].pairs;
         let moves = 0;
         let lockBoard = true; 
+
+        // --- Dark / Light Mode ---
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+
+        // --- Selettore Difficoltà ---
+        difficultySelect.addEventListener('change', () => {
+            currentDifficulty = difficultySelect.value;
+            initGame();
+        });
 
         // --- Gestione Tester Mode ---
 
@@ -172,48 +289,39 @@
                 testerMessage.textContent = 'Modalità Tester Attivata! ✅';
                 testerMessage.style.color = '#2ecc71';
                 
-                // Nasconde gli elementi di input e mostra il pulsante di uscita
                 passwordInput.style.display = 'none';
                 testerButton.style.display = 'none';
                 exitTesterButton.style.display = 'inline-block';
                 testerMessage.style.display = 'inline';
                 
                 updateDebugState(); 
-                lockBoard = false; // Sblocca il gioco anche se non si gioca
+                lockBoard = false;
             } else {
                 testerMessage.textContent = 'Password errata.';
                 testerMessage.style.color = '#e74c3c';
             }
         });
 
-        // NUOVA FUNZIONE: Esci dalla modalità Tester
         exitTesterButton.addEventListener('click', () => {
             isDebugMode = false;
             testerMessage.textContent = 'Modalità Tester Disattivata.';
             testerMessage.style.color = '#333';
             
-            // Nasconde il pulsante di uscita e mostra gli elementi di input
             passwordInput.style.display = 'inline';
             testerButton.style.display = 'inline';
             exitTesterButton.style.display = 'none';
             
-            // Rimuove la classe debug da tutte le carte non ancora abbinate
             updateDebugState(); 
-            
-            // Riabilita la possibilità di cliccare e riprende il gioco
             lockBoard = false; 
         });
 
-        // Aggiorna lo stato visivo delle carte in base alla modalità debug
         function updateDebugState() {
             const allCards = document.querySelectorAll('.card');
             allCards.forEach(card => {
                 if (isDebugMode) {
                     card.classList.add('debug-active');
                 } else {
-                    // Se usciamo dalla modalità debug:
                     card.classList.remove('debug-active');
-                    // Nascondi solo le carte che NON sono state abbinate
                     if (!card.classList.contains('matched')) {
                         card.classList.remove('flipped');
                     }
@@ -231,15 +339,26 @@
             return array;
         }
 
+        function buildDeck() {
+            const { pairs } = DIFFICULTY[currentDifficulty];
+            const chosenEmojis = EMOJI_POOL.slice(0, pairs);
+            return shuffle([...chosenEmojis, ...chosenEmojis]);
+        }
+
         function initGame() {
-            shuffledCards = shuffle([...cardsArray]);
+            const { cols, pairs } = DIFFICULTY[currentDifficulty];
+            totalPairs = pairs;
+
+            shuffledCards = buildDeck();
             gameBoard.innerHTML = '';
+            gameBoard.style.gridTemplateColumns = `repeat(${cols}, 90px)`;
+
             moves = 0;
             movesDisplay.textContent = 'Mosse: 0';
             matchedPairs = 0;
+            flippedCards = [];
             restartButton.style.display = 'none';
 
-            // Resetta i controlli tester solo se non è in modalità debug
             if (!isDebugMode) {
                 testerMessage.textContent = '';
                 passwordInput.style.display = 'inline';
@@ -312,7 +431,7 @@
             flippedCards = [];
             matchedPairs++;
 
-            if (matchedPairs === cardsArray.length / 2) {
+            if (matchedPairs === totalPairs) {
                 setTimeout(() => {
                     alert(`Hai vinto in ${moves} mosse!`);
                     restartButton.style.display = 'inline-block';
