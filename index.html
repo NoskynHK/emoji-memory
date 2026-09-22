@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Memory Game</title>
 
     <link rel="icon" type="image/png" href="logo.png">
@@ -14,6 +14,9 @@
             --text: #333;
             --panel-bg: #fff;
             --panel-border: #ccc;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            box-sizing: border-box;
         }
 
         body.dark-mode {
@@ -61,6 +64,7 @@
             margin-bottom: 10px;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
         }
 
         #themeToggle {
@@ -75,6 +79,45 @@
         }
         #themeToggle:hover {
             opacity: 0.8;
+        }
+
+        /* --- Language switcher --- */
+        #langSwitcher {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background-color: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 999px;
+            padding: 4px;
+        }
+        .lang-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1.3em;
+            line-height: 1;
+            padding: 6px 10px;
+            border-radius: 999px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+            font-weight: bold;
+            font-family: inherit;
+        }
+        .lang-btn:hover {
+            background-color: rgba(88, 101, 242, 0.15);
+        }
+        .lang-btn.active {
+            background-color: #5865f2;
+            color: white;
+            box-shadow: 0 2px 6px rgba(88, 101, 242, 0.5);
+        }
+        .lang-btn .lang-code {
+            font-size: 0.6em;
+            letter-spacing: 0.5px;
         }
 
         #difficulty-controls {
@@ -198,38 +241,47 @@
             color: white;
             opacity: 1;
         }
+
+        @media (max-width: 480px) {
+            .card { width: 60px; height: 60px; font-size: 1.8em; }
+        }
     </style>
 </head>
 <body>
 
-    <a href="https://noskynhk.github.io/gamehub/" class="back-btn">🎮 Torna alla Game Hub</a>
+    <a href="https://noskynhk.github.io/gamehub/" class="back-btn" data-i18n="backBtn">🎮 Torna alla Game Hub</a>
 
-    <h1>Emoji Memory Game</h1>
+    <h1 data-i18n="heading">🧠 Emoji Memory Game</h1>
 
     <div id="topBar">
-        <button id="themeToggle">🌙 Dark Mode</button>
+        <button id="themeToggle" data-i18n="themeDark">🌙 Dark Mode</button>
+        <div id="langSwitcher">
+            <button class="lang-btn" data-lang="it" title="Italiano"><span>🇮🇹</span><span class="lang-code">IT</span></button>
+            <button class="lang-btn" data-lang="en" title="English"><span>🇬🇧</span><span class="lang-code">EN</span></button>
+            <button class="lang-btn" data-lang="de" title="Deutsch"><span>🇩🇪</span><span class="lang-code">DE</span></button>
+        </div>
     </div>
 
     <div id="difficulty-controls">
-        <label for="difficultySelect">Difficoltà:</label>
+        <label for="difficultySelect" data-i18n="difficultyLabel">Difficoltà:</label>
         <select id="difficultySelect">
-            <option value="easy">Facile (4x4)</option>
-            <option value="medium">Medio (4x6)</option>
-            <option value="hard">Difficile (6x6)</option>
+            <option value="easy" data-i18n="diffEasy">Facile (4x4)</option>
+            <option value="medium" data-i18n="diffMedium">Medio (4x6)</option>
+            <option value="hard" data-i18n="diffHard">Difficile (6x6)</option>
         </select>
     </div>
     
     <div id="tester-controls">
-        <label for="passwordInput">Tester Mode:</label>
-        <input type="password" id="passwordInput" placeholder="Inserisci Password">
-        <button id="testerButton">Attiva</button>
-        <button id="exitTesterButton" style="display: none;">Esci da Tester Mode</button>
+        <label for="passwordInput" data-i18n="testerLabel">Tester Mode:</label>
+        <input type="password" id="passwordInput" data-i18n-placeholder="passwordPlaceholder" placeholder="Inserisci Password">
+        <button id="testerButton" data-i18n="testerActivate">Attiva</button>
+        <button id="exitTesterButton" style="display: none;" data-i18n="testerExit">Esci da Tester Mode</button>
         <p id="testerMessage" style="color:red; margin-top: 5px; font-size: 0.9em;"></p>
     </div>
 
     <div id="controls">
         <div id="moves">Mosse: 0</div>
-        <button id="restartButton">Riprova</button>
+        <button id="restartButton" data-i18n="restartBtn">Riprova</button>
     </div>
 
     <div id="game-board"></div>
@@ -247,9 +299,77 @@
             hard:   { pairs: 18, cols: 6 }
         };
 
+        // --- Traduzioni ---
+        const TRANSLATIONS = {
+            it: {
+                pageTitle: 'Memory Game',
+                heading: '🧠 Emoji Memory Game',
+                backBtn: '🎮 Torna alla Game Hub',
+                themeDark: '🌙 Dark Mode',
+                themeLight: '☀️ Light Mode',
+                difficultyLabel: 'Difficoltà:',
+                diffEasy: 'Facile (4x4)',
+                diffMedium: 'Medio (4x6)',
+                diffHard: 'Difficile (6x6)',
+                testerLabel: 'Tester Mode:',
+                passwordPlaceholder: 'Inserisci Password',
+                testerActivate: 'Attiva',
+                testerExit: 'Esci da Tester Mode',
+                testerActivated: 'Modalità Tester Attivata! ✅',
+                testerDeactivated: 'Modalità Tester Disattivata.',
+                testerWrongPass: 'Password errata.',
+                movesLabel: 'Mosse',
+                restartBtn: 'Riprova',
+                winMessage: (m) => `Hai vinto in ${m} mosse!`
+            },
+            en: {
+                pageTitle: 'Memory Game',
+                heading: '🧠 Emoji Memory Game',
+                backBtn: '🎮 Back to Game Hub',
+                themeDark: '🌙 Dark Mode',
+                themeLight: '☀️ Light Mode',
+                difficultyLabel: 'Difficulty:',
+                diffEasy: 'Easy (4x4)',
+                diffMedium: 'Medium (4x6)',
+                diffHard: 'Hard (6x6)',
+                testerLabel: 'Tester Mode:',
+                passwordPlaceholder: 'Enter Password',
+                testerActivate: 'Activate',
+                testerExit: 'Exit Tester Mode',
+                testerActivated: 'Tester Mode Activated! ✅',
+                testerDeactivated: 'Tester Mode Deactivated.',
+                testerWrongPass: 'Wrong password.',
+                movesLabel: 'Moves',
+                restartBtn: 'Retry',
+                winMessage: (m) => `You won in ${m} moves!`
+            },
+            de: {
+                pageTitle: 'Memory-Spiel',
+                heading: '🧠 Emoji Memory-Spiel',
+                backBtn: '🎮 Zurück zum Game Hub',
+                themeDark: '🌙 Dunkelmodus',
+                themeLight: '☀️ Hellmodus',
+                difficultyLabel: 'Schwierigkeit:',
+                diffEasy: 'Leicht (4x4)',
+                diffMedium: 'Mittel (4x6)',
+                diffHard: 'Schwer (6x6)',
+                testerLabel: 'Tester-Modus:',
+                passwordPlaceholder: 'Passwort eingeben',
+                testerActivate: 'Aktivieren',
+                testerExit: 'Tester-Modus verlassen',
+                testerActivated: 'Tester-Modus aktiviert! ✅',
+                testerDeactivated: 'Tester-Modus deaktiviert.',
+                testerWrongPass: 'Falsches Passwort.',
+                movesLabel: 'Züge',
+                restartBtn: 'Nochmal',
+                winMessage: (m) => `Du hast in ${m} Zügen gewonnen!`
+            }
+        };
+
         const CORRECT_PASSWORD = '4468';
         let isDebugMode = false;
         let currentDifficulty = 'easy';
+        let currentLang = 'it';
 
         const gameBoard = document.getElementById('game-board');
         const movesDisplay = document.getElementById('moves');
@@ -260,6 +380,7 @@
         const testerMessage = document.getElementById('testerMessage');
         const difficultySelect = document.getElementById('difficultySelect');
         const themeToggle = document.getElementById('themeToggle');
+        const langButtons = document.querySelectorAll('.lang-btn');
 
         let shuffledCards = [];
         let flippedCards = []; 
@@ -268,11 +389,57 @@
         let moves = 0;
         let lockBoard = true; 
 
+        // --- Lingua ---
+        function applyTranslations() {
+            const t = TRANSLATIONS[currentLang];
+            document.documentElement.lang = currentLang;
+            document.title = t.pageTitle;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key] !== undefined) el.textContent = t[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key] !== undefined) el.placeholder = t[key];
+            });
+
+            // Elementi con stato dinamico
+            const isDark = document.body.classList.contains('dark-mode');
+            themeToggle.textContent = isDark ? t.themeLight : t.themeDark;
+            movesDisplay.textContent = `${t.movesLabel}: ${moves}`;
+
+            langButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLang);
+            });
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            try { localStorage.setItem('memoryGameLang', lang); } catch (e) {}
+            applyTranslations();
+        }
+
+        langButtons.forEach(btn => {
+            btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+        });
+
+        (function initLanguage() {
+            let saved = null;
+            try { saved = localStorage.getItem('memoryGameLang'); } catch (e) {}
+            if (saved && TRANSLATIONS[saved]) {
+                currentLang = saved;
+            } else {
+                const browserLang = (navigator.language || 'it').slice(0, 2);
+                currentLang = TRANSLATIONS[browserLang] ? browserLang : 'it';
+            }
+        })();
+
         // --- Dark / Light Mode ---
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
-            themeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+            themeToggle.textContent = isDark ? TRANSLATIONS[currentLang].themeLight : TRANSLATIONS[currentLang].themeDark;
         });
 
         // --- Selettore Difficoltà ---
@@ -284,9 +451,10 @@
         // --- Gestione Tester Mode ---
 
         testerButton.addEventListener('click', () => {
+            const t = TRANSLATIONS[currentLang];
             if (passwordInput.value === CORRECT_PASSWORD) {
                 isDebugMode = true;
-                testerMessage.textContent = 'Modalità Tester Attivata! ✅';
+                testerMessage.textContent = t.testerActivated;
                 testerMessage.style.color = '#2ecc71';
                 
                 passwordInput.style.display = 'none';
@@ -297,14 +465,14 @@
                 updateDebugState(); 
                 lockBoard = false;
             } else {
-                testerMessage.textContent = 'Password errata.';
+                testerMessage.textContent = t.testerWrongPass;
                 testerMessage.style.color = '#e74c3c';
             }
         });
 
         exitTesterButton.addEventListener('click', () => {
             isDebugMode = false;
-            testerMessage.textContent = 'Modalità Tester Disattivata.';
+            testerMessage.textContent = TRANSLATIONS[currentLang].testerDeactivated;
             testerMessage.style.color = '#333';
             
             passwordInput.style.display = 'inline';
@@ -354,7 +522,7 @@
             gameBoard.style.gridTemplateColumns = `repeat(${cols}, 90px)`;
 
             moves = 0;
-            movesDisplay.textContent = 'Mosse: 0';
+            movesDisplay.textContent = `${TRANSLATIONS[currentLang].movesLabel}: 0`;
             matchedPairs = 0;
             flippedCards = [];
             restartButton.style.display = 'none';
@@ -406,7 +574,7 @@
 
             if (flippedCards.length === 2) {
                 moves++;
-                movesDisplay.textContent = `Mosse: ${moves}`;
+                movesDisplay.textContent = `${TRANSLATIONS[currentLang].movesLabel}: ${moves}`;
                 checkForMatch();
             }
         }
@@ -433,7 +601,7 @@
 
             if (matchedPairs === totalPairs) {
                 setTimeout(() => {
-                    alert(`Hai vinto in ${moves} mosse!`);
+                    alert(TRANSLATIONS[currentLang].winMessage(moves));
                     restartButton.style.display = 'inline-block';
                 }, 500);
             }
@@ -453,7 +621,8 @@
 
         restartButton.addEventListener('click', initGame);
 
-        // Avvia il gioco
+        // Avvia
+        applyTranslations();
         initGame();
     </script>
 </body>
