@@ -213,7 +213,8 @@
             align-items: center;
             cursor: pointer;
             font-size: 2.6em;
-            color: transparent; 
+            color: transparent;
+            overflow: hidden;
             transition: transform 0.3s, background-color 0.3s, color 0.3s;
             position: relative;
             user-select: none;
@@ -249,16 +250,16 @@
 </head>
 <body>
 
-    <a href="https://noskynhk.github.io/gamehub/" class="back-btn" data-i18n="backBtn">🎮 Torna alla Game Hub</a>
+    <a href="https://noskynhk.github.io/gamehub/" class="back-btn" data-i18n="backBtn"> Torna alla Game Hub</a>
 
-    <h1 data-i18n="heading">🧠 Emoji Memory Game</h1>
+    <h1 data-i18n="heading"> Emoji Memory Game</h1>
 
     <div id="topBar">
-        <button id="themeToggle" data-i18n="themeDark">🌙 Dark Mode</button>
+        <button id="themeToggle" data-i18n="themeDark"> Dark Mode</button>
         <div id="langSwitcher">
-            <button class="lang-btn" data-lang="it" title="Italiano"><span>🇮🇹</span><span class="lang-code">IT</span></button>
-            <button class="lang-btn" data-lang="en" title="English"><span>🇬🇧</span><span class="lang-code">EN</span></button>
-            <button class="lang-btn" data-lang="de" title="Deutsch"><span>🇩🇪</span><span class="lang-code">DE</span></button>
+            <button class="lang-btn" data-lang="it" title="Italiano"><span></span><span class="lang-code">IT</span></button>
+            <button class="lang-btn" data-lang="en" title="English"><span></span><span class="lang-code">EN</span></button>
+            <button class="lang-btn" data-lang="de" title="Deutsch"><span></span><span class="lang-code">DE</span></button>
         </div>
     </div>
 
@@ -288,9 +289,9 @@
 
     <script>
         const EMOJI_POOL = [
-            '🦊', '🦁', '🐻', '🐼', '🐵', '🐸', '🐺', '🦉',
-            '🐯', '🐨', '🐮', '🐷', '🐔', '🐧', '🦄', '🐙',
-            '🦋', '🐝'
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            '', ''
         ];
 
         const DIFFICULTY = {
@@ -303,10 +304,10 @@
         const TRANSLATIONS = {
             it: {
                 pageTitle: 'Memory Game',
-                heading: '🧠 Emoji Memory Game',
-                backBtn: '🎮 Torna alla Game Hub',
-                themeDark: '🌙 Dark Mode',
-                themeLight: '☀️ Light Mode',
+                heading: ' Emoji Memory Game',
+                backBtn: ' Torna alla Game Hub',
+                themeDark: ' Dark Mode',
+                themeLight: ' Light Mode',
                 difficultyLabel: 'Difficoltà:',
                 diffEasy: 'Facile (4x4)',
                 diffMedium: 'Medio (4x6)',
@@ -315,7 +316,7 @@
                 passwordPlaceholder: 'Inserisci Password',
                 testerActivate: 'Attiva',
                 testerExit: 'Esci da Tester Mode',
-                testerActivated: 'Modalità Tester Attivata! ✅',
+                testerActivated: 'Modalità Tester Attivata! ',
                 testerDeactivated: 'Modalità Tester Disattivata.',
                 testerWrongPass: 'Password errata.',
                 movesLabel: 'Mosse',
@@ -324,10 +325,10 @@
             },
             en: {
                 pageTitle: 'Memory Game',
-                heading: '🧠 Emoji Memory Game',
-                backBtn: '🎮 Back to Game Hub',
-                themeDark: '🌙 Dark Mode',
-                themeLight: '☀️ Light Mode',
+                heading: ' Emoji Memory Game',
+                backBtn: ' Back to Game Hub',
+                themeDark: ' Dark Mode',
+                themeLight: ' Light Mode',
                 difficultyLabel: 'Difficulty:',
                 diffEasy: 'Easy (4x4)',
                 diffMedium: 'Medium (4x6)',
@@ -336,7 +337,7 @@
                 passwordPlaceholder: 'Enter Password',
                 testerActivate: 'Activate',
                 testerExit: 'Exit Tester Mode',
-                testerActivated: 'Tester Mode Activated! ✅',
+                testerActivated: 'Tester Mode Activated! ',
                 testerDeactivated: 'Tester Mode Deactivated.',
                 testerWrongPass: 'Wrong password.',
                 movesLabel: 'Moves',
@@ -345,10 +346,10 @@
             },
             de: {
                 pageTitle: 'Memory-Spiel',
-                heading: '🧠 Emoji Memory-Spiel',
-                backBtn: '🎮 Zurück zum Game Hub',
-                themeDark: '🌙 Dunkelmodus',
-                themeLight: '☀️ Hellmodus',
+                heading: ' Emoji Memory-Spiel',
+                backBtn: ' Zurück zum Game Hub',
+                themeDark: ' Dunkelmodus',
+                themeLight: ' Hellmodus',
                 difficultyLabel: 'Schwierigkeit:',
                 diffEasy: 'Leicht (4x4)',
                 diffMedium: 'Mittel (4x6)',
@@ -357,7 +358,7 @@
                 passwordPlaceholder: 'Passwort eingeben',
                 testerActivate: 'Aktivieren',
                 testerExit: 'Tester-Modus verlassen',
-                testerActivated: 'Tester-Modus aktiviert! ✅',
+                testerActivated: 'Tester-Modus aktiviert! ',
                 testerDeactivated: 'Tester-Modus deaktiviert.',
                 testerWrongPass: 'Falsches Passwort.',
                 movesLabel: 'Züge',
@@ -488,10 +489,12 @@
             allCards.forEach(card => {
                 if (isDebugMode) {
                     card.classList.add('debug-active');
+                    card.textContent = card.dataset.emoji;
                 } else {
                     card.classList.remove('debug-active');
                     if (!card.classList.contains('matched')) {
                         card.classList.remove('flipped');
+                        card.textContent = '';
                     }
                 }
             });
@@ -539,7 +542,7 @@
                 card.classList.add('card');
                 card.dataset.emoji = emoji; 
                 card.dataset.index = index; 
-                card.textContent = emoji;
+                card.textContent = isDebugMode ? emoji : '';
                 
                 card.addEventListener('click', flipCard);
                 gameBoard.appendChild(card);
@@ -557,10 +560,18 @@
             lockBoard = true;
             const allCards = document.querySelectorAll('.card');
             
-            allCards.forEach(card => card.classList.add('preview'));
+            allCards.forEach(card => {
+                card.classList.add('preview');
+                card.textContent = card.dataset.emoji;
+            });
 
             setTimeout(() => {
-                allCards.forEach(card => card.classList.remove('preview'));
+                allCards.forEach(card => {
+                    card.classList.remove('preview');
+                    if (!card.classList.contains('matched') && !isDebugMode) {
+                        card.textContent = '';
+                    }
+                });
                 lockBoard = false;
             }, 2000); 
         }
@@ -570,6 +581,7 @@
             if (this === flippedCards[0]) return; 
 
             this.classList.add('flipped');
+            this.textContent = this.dataset.emoji;
             flippedCards.push(this);
 
             if (flippedCards.length === 2) {
@@ -613,6 +625,10 @@
             setTimeout(() => {
                 flippedCards[0].classList.remove('flipped');
                 flippedCards[1].classList.remove('flipped');
+                if (!isDebugMode) {
+                    flippedCards[0].textContent = '';
+                    flippedCards[1].textContent = '';
+                }
                 
                 flippedCards = [];
                 lockBoard = false;
